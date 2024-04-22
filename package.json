@@ -1,0 +1,28 @@
+{
+  "name": "discord-bot-simplex",
+  "version": "1.2.4.1",
+  "description": "Discord bot for Discord Servers",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "author": "MasterCont",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/opus": "^0.9.0",
+    "@discordjs/voice": "^0.16.0",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "ffmpeg-static": "^5.1.0",
+    "install": "^0.13.0",
+    "libsodium-wrappers": "^0.7.11",
+    "mysql": "^2.18.1",
+    "npm": "^9.8.1",
+    "play-dl": "^1.9.6",
+    "request": "^2.88.2",
+    "tweetnacl": "^1.0.3",
+    "ym-api": "^1.2.1",
+    "yt-search": "^2.10.4"
+  }
+}

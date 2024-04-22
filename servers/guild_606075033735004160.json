@@ -1,0 +1,16 @@
+{"id":"606075033735004160","notifications":false,"warnSystem":true,"fakeWarnSystem":false,"rangSystem":false,"marrySystem":true,"logSystem":true,"newsChannelId":null,"globalChannelId":null,"moderators":{"users":[],"roles":[]},"warnCountMax":3,"warns":[],"fakeWarns":[],
+  "marriedUsers":[
+    {
+      "offering_user":{"username":"mastercont","id":"435061231456354304"},
+      "expected_user":{"username":"aksariss","id":"990900546871361546"},
+      "date":{"date":"27.01.2024","time":"20:11:44"}},
+    {
+      "offering_user": {"username":"000169","id":"841312634267893771"},
+      "expected_user":{"username":"k1dosi4","id":"866961273894600705"},
+      "date":{"date":"27.01.2024","time":"20:57:17"}
+    },
+    {
+      "offering_user":{"username":"matveytree","id":"640856051851460629"},
+      "expected_user":{"username":"taedi_88","id":"464759115378327552"},
+      "date":{"date":"21.03.2024","time":"00:39:53"}}],
+  "ranges":[]}

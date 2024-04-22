@@ -1,0 +1,27 @@
+{
+    "content": null,
+    "embeds": [
+      {
+        "title": "Плейлист: \"Понравилось на радио\"",
+        "color": null,
+        "fields": [
+          {
+            "name": "Сейчас играет: Can We Kiss Forever?",
+            "value": "Треков в очереди: 50"
+          }
+        ],
+        "author": {
+          "name": "MasterCont",
+          "icon_url": "https://images-ext-1.discordapp.net/external/lZOLPFN8XwpDBXtPOmFMurl2MYDwswFUdrOPKFXR-E4/https/cdn.discordapp.com/avatars/435061231456354304/39176257158e31b5c5a3a0d9ab29200c.webp"
+        },
+        "footer": {
+          "text": "Яндекс Музыка",
+          "icon_url": "https://music.yandex.ru/favicon32.png"
+        },
+        "thumbnail": {
+          "url": "https://avatars.yandex.net/get-music-user-playlist/70586/playlist-radio-likes-default-2/100x100"
+        }
+      }
+    ],
+    "attachments": []
+  }

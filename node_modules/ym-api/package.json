@@ -1,0 +1,43 @@
+{
+  "name": "ym-api",
+  "version": "1.2.1",
+  "homepage": "https://github.com/kontsevoye/ym-api",
+  "description": "A Node.js wrapper for the Yandex.Music API (Unofficial) http://music.yandex.ru",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "Anton Petrov",
+  "contributors": [
+    "Anton Petrov (https://itsmepetrov.com)",
+    "Evgeny Kontsevoy (https://github.com/kontsevoye)",
+    "Donnevtis (https://github.com/Donnevtis)"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kontsevoye/ym-api.git"
+  },
+  "keywords": [
+    "yandex",
+    "music",
+    "api",
+    "wrapper",
+    "yandex.music"
+  ],
+  "dependencies": {
+    "axios": "^0.21.1",
+    "xml2js": "^0.4.23"
+  },
+  "devDependencies": {
+    "@tsconfig/node12": "^1.0.7",
+    "@types/node": "^14.14.16",
+    "@types/xml2js": "^0.4.7",
+    "prettier": "2.2.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "npm run build",
+    "format": "npx prettier --write ."
+  }
+}
