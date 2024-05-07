@@ -117,10 +117,10 @@ client.on(Events.Error, async (err) => {
         rawError:{
             message: err
         },
-        code: NULL,
-        status: NULL,
-        method: NULL,
-        url: NULL
+        code: null,
+        status: null,
+        method: null,
+        url: null
     }
 
     await createError(err);

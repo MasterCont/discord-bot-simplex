@@ -185,7 +185,7 @@ async function createNewHistoryMessage(guild, channel, sql_role, message){
     let sql_guild = JSON.stringify({name: guild.name, id: guild.id});
     let sql_channel = JSON.stringify({name: channel.name, id: channel.id});
     let sql_author = JSON.stringify({username: message.author.username, id: message.author.id});
-    let sql_content = JSON.stringify({text: message.content, embeds: message.embeds, attachments: message.attachments});
+    let sql_content = JSON.stringify({text: message.content.replaceAll(`"`, `#`).replaceAll(`'`, `#`).replaceAll('`', `#`), embeds: message.embeds, attachments: message.attachments});
 
     let sql = `INSERT INTO ${process.env.MYSQL_TABLE_MESSAGES} (id, date, time, guild, channel, role, author, content) VALUES (NULL, '${sql_date}', '${sql_time}', '${sql_guild}', '${sql_channel}', '${sql_role}', '${sql_author}', '${sql_content}')`;
     db.query(sql, async (err) => {
@@ -786,11 +786,12 @@ class handler{
     async out_channel_history_messages(channel, quantity){
         let sql = `SELECT * FROM ${process.env.MYSQL_TABLE_MESSAGES} WHERE JSON_CONTAINS(guild, '{"id": "${this.interaction.guildId}"}') AND JSON_CONTAINS(channel, '{"id": "${channel.id}"}') ORDER BY id DESC LIMIT ${quantity};`
         let logPathFile = `./temp/guild_${this.interaction.guild.id}.log`;
+        let interaction = this.interaction;
 
-        db.query(sql, async (err, data) => {
+        await db.query(sql, async (err, data) => {
             if (err) throw err;
             if (data) await sysMySQLPrint(`Данные сообщений гильдии '${this.interaction.guildId}' для канала '${channel.id}' успешно получены!`);
-            if (data.length <= 0) return await sendReplyHidden(this.interaction, "На вашем сервере нет истории сообщений.");
+            if (data.length <= 0) return await sendReplyHidden(interaction, "На вашем сервере нет истории сообщений.");
             else {
                 let allQuantity = data.length;
                 if (quantity >= allQuantity) await getFile(allQuantity, data);
@@ -801,15 +802,16 @@ class handler{
 
         async function getFile(queue, data){
             for (let i = 0; i < await queue; i++) {
-                let guild = JSON.parse(data[i].guild);
-                let channel = JSON.parse(data[i].channel);
-                let author = JSON.parse(data[i].author);
+                let guild = await JSON.parse(data[i].guild);
+                let channel = await JSON.parse(data[i].channel);
+                let author = await JSON.parse(data[i].author);
 
-                if (await guild.id === await this.interaction.guild.id && await channel.id === await this.interaction.channel.id) {
-                    let message = `${i}. [${await convertDate(data[i].date)} - ${await data[i].time}] ${await author.username}: ${await data[i].content}`;
+                if (await guild.id === await interaction.guildId && await channel.id === await interaction.channel["id"]) {
+                    let content = await JSON.parse(data[i].content);
+                    let message = `${i}. [${await convertDate(data[i].date)} - ${await data[i].time}] ${await author.username}: {"text": "${await content.text}", "embeds": ${JSON.stringify(content.embeds)}}, "attachments": ${JSON.stringify(content.attachments)}}`;
                     await fs.appendFile(logPathFile, `${message}\n`, async function (err) {
                         if (err) {
-                            await sendReplyHidden(this.interaction, "Не удалось внести изменения в файл.");
+                            await sendReplyHidden(interaction, "Не удалось внести изменения в файл.");
                             await createError(err);
                         } else {
                             if (i + 1 === await queue) await sendFile(logPathFile, queue);
@@ -820,8 +822,8 @@ class handler{
         }
         async function sendFile(logPathFile, allQuantity) {
             const attachment = new AttachmentBuilder(logPathFile, {name: `messages.log`});
-            await sendReplyFileHidden(this.interaction, `Всего ${allQuantity} сообщений в базе.`, attachment)
-                .catch(async () => await sendReplyHidden(this.interaction, `Не удалось отправить файл. Возможно, его вес первышает максимальное допустимое значение. Попробуйте понизить количество сообщений в переменной "quantity".`));
+            await sendReplyFileHidden(interaction, `Всего ${allQuantity} сообщений в базе.`, attachment)
+                .catch(async () => await sendReplyHidden(interaction, `Не удалось отправить файл. Возможно, его вес первышает максимальное допустимое значение. Попробуйте понизить количество сообщений в переменной "quantity".`));
             await fs.unlinkSync(logPathFile);
         }
     }
@@ -1089,7 +1091,7 @@ class warn{
 
             // Проверка, если модератор уже в базе
             let moderators = await new database().getModerators(this.interaction.guildId);
-            let mod_users = JSON.parse(moderators.users);
+            let mod_users = await JSON.parse(moderators.users);
             for (let i= 0; i < mod_users.length; i++) {
                 if (mod_users[i] === user.id) return reject({type: "error", reason: `Пользователь <@${user.id}> является модератором.`});
             }
