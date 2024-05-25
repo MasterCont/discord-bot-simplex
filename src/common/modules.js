@@ -916,7 +916,6 @@ class handler{
          return await new Promise(async () => {
             await new database().getCommands()
                 .then( async (data) => {
-                   console.log(data);
                    let list = ``;
 
                     for (let i = 0; i < data.length; i++) {
