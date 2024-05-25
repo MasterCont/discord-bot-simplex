@@ -46,6 +46,8 @@ const commands = {
                 .setDescriptionLocalization("ru", "Канал, с которого вы хотите получить всю историю сообщений.").setRequired(true))
             .addNumberOption((option) => option.setName("quantity").setDescription("Enter the number of messages from the last one sent on the channel.")
                 .setDescriptionLocalization("ru", "Введите количество сообщений из последнего, отправленного по каналу.").setRequired(true))
+            .addStringOption((option) => option.setName("search").setDescription("Output messages with a similar value")
+                .setDescriptionLocalization("ru", "Вывести сообщения с подобным значением"))
             .setNSFW(false)
             .setDMPermission(false)
             .toJSON(),
@@ -342,13 +344,6 @@ const commands = {
             .setDMPermission(true)
             .toJSON(),
 
-        // new SlashCommandBuilder()
-        // .setName("help").setNameLocalization("ru", "помощь")
-        // .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
-        // .setDescription("Output the available commands for the user.")
-        // .setDescriptionLocalization("ru", "Вывести доступные команды для пользователя.")
-        // .toJSON(),
-
         // 1.2.0
 
         new SlashCommandBuilder()
@@ -612,21 +607,128 @@ const commands = {
             .setDMPermission(false)
             .toJSON(),
 
+        // 1.2.5
+        new SlashCommandBuilder()
+            .setName("help").setNameLocalization("ru", "помощь")
+            .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
+            .setDescription("Getting information about the bots functions.")
+            .setDescriptionLocalization("ru", "Получение информации о функциях бота.")
+            .setNSFW(false)
+            .setDMPermission(false)
+            .toJSON(),
+
+        // new SlashCommandBuilder()
+        //     .setName("draw").setNameLocalization("ru", "рисовать")
+        //     .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
+        //     .setDescription("Ask the AI to draw something.")
+        //     .setDescriptionLocalization("ru", "Попросите ИИ что-нибудь нарисовать.")
+        //     .addStringOption((option) => option.setName("request").setNameLocalization("ru", "запрос")
+        //         .setDescription("Write here what you want to see.")
+        //         .setDescriptionLocalization("ru", "Напишите сюда то, что вы хотите увидеть.")
+        //         .setRequired(true))
+        //     .setNSFW(false)
+        //     .setDMPermission(false)
+        //     .toJSON(),
+
+        new SlashCommandBuilder()
+            .setName("add_an_emoji").setNameLocalization("ru", "добавить_эмодзи")
+            .setDefaultMemberPermissions(PermissionFlagsBits.ManageEmojisAndStickers)
+            .setDescription("Add emoji to the server.")
+            .setDescriptionLocalization("ru", "Добавьте эмодзи на сервер.")
+            .addAttachmentOption((option) =>
+                option.setName("picture")
+                    .setNameLocalization("ru", "изображение")
+                    .setDescription("An image to add as an emoji.")
+                    .setDescriptionLocalization("ru", "Изображение для добавления в качестве эмодзи.")
+                    .setRequired(true)
+            )
+            .addStringOption((option) =>
+                option.setName("name")
+                    .setNameLocalization("ru", "имя")
+                    .setDescription("Emoji Name.")
+                    .setDescriptionLocalization("ru", "Название эмодзи.")
+                    .setRequired(true)
+            )
+            .setNSFW(false)
+            .setDMPermission(false)
+            .toJSON(),
+
+        // new SlashCommandBuilder()
+        //     .setName("add_an_sticker").setNameLocalization("ru", "добавить_стикер")
+        //     .setDefaultMemberPermissions(PermissionFlagsBits.ManageEmojisAndStickers)
+        //     .setDescription("Add sticker to the server.")
+        //     .setDescriptionLocalization("ru", "Добавьте стикер на сервер.")
+        //     .addAttachmentOption((option) =>
+        //         option.setName("picture")
+        //             .setNameLocalization("ru", "изображение")
+        //             .setDescription("An image to add as an sticker.")
+        //             .setDescriptionLocalization("ru", "Изображение для добавления в качестве стикера.")
+        //             .setRequired(true)
+        //     )
+        //     .addStringOption((option) =>
+        //         option.setName("name")
+        //             .setNameLocalization("ru", "имя")
+        //             .setDescription("Sticker Name.")
+        //             .setDescriptionLocalization("ru", "Название стикера.")
+        //             .setRequired(true)
+        //     )
+        //     .addStringOption((option) =>
+        //         option.setName("tags")
+        //             .setNameLocalization("ru", "тэги")
+        //             .setDescription("The corresponding emoji for the sticker.")
+        //             .setDescriptionLocalization("ru", "Соответствующее эмодзи под стикер.")
+        //             .setRequired(false)
+        //     )
+        //     .addStringOption((option) =>
+        //         option.setName("description")
+        //             .setNameLocalization("ru", "описание")
+        //             .setDescription("You can describe this sticker in detail.")
+        //             .setDescriptionLocalization("ru", "Вы можете подробно описать этот стикер.")
+        //             .setRequired(false)
+        //     )
+        //     .setNSFW(false)
+        //     .setDMPermission(false)
+        //     .toJSON(),
+
         // User context commands
         new ContextMenuCommandBuilder()
-            .setName("Get the user avatar.")
-            .setNameLocalization("ru", "Получить аватар пользователя.")
+            .setName("Get the user avatar")
+            .setNameLocalization("ru", "Получить аватар пользователя")
             .setType(ApplicationCommandType.User)
             .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
             .setDMPermission(true)
             .toJSON(),
 
         new ContextMenuCommandBuilder()
-            .setName("Get user information.")
-            .setNameLocalization("ru", "Получить информацию.")
+            .setName("Get user information")
+            .setNameLocalization("ru", "Получить информацию")
             .setType(ApplicationCommandType.User)
             .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
             .setDMPermission(false)
+            .toJSON(),
+
+        // 1.2.5
+        new ContextMenuCommandBuilder()
+            .setName("Flip the user nickname")
+            .setNameLocalization("ru", "Перевернуть никнейм пользователя")
+            .setType(ApplicationCommandType.User)
+            .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
+            .setDMPermission(true)
+            .toJSON(),
+
+        new ContextMenuCommandBuilder()
+            .setName("Warn")
+            .setNameLocalization("ru", "Варн")
+            .setType(ApplicationCommandType.User)
+            .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers)
+            .setDMPermission(false)
+            .toJSON(),
+        new ContextMenuCommandBuilder()
+            .setName("Marry")
+            .setNameLocalization("ru", "Жениться")
+            .setType(ApplicationCommandType.User)
+            .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
+            .setDMPermission(true)
             .toJSON(),
     ]
 }

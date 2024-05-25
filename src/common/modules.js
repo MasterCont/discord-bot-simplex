@@ -16,7 +16,7 @@ const db = mysql.createPool({
 });
 
 const util = require("util");
-const {joinVoiceChannel, VoiceConnectionStatus} = require("@discordjs/voice");
+const {joinVoiceChannel} = require("@discordjs/voice");
 console.trace = function trace() {
     let err = new Error();
     err.name = 'Trace';
@@ -35,17 +35,7 @@ async function sysInfoError(value) {await console.log(`\x1b[0m[\x1b[31mИнфо�
 async function sysError(value) {await console.error(`\x1b[0m[\x1b[31mСистема\x1b[0m] \x1b[35m[${date()}]\x1b[37m \x1b[35m[${time()}] \x1b[31m${value}\x1b[37m`)}
 async function sysPrintNewMessage(value) {await console.log(`\x1b[0m[\x1b[33mСообщение\x1b[0m] \x1b[35m[${date()}]\x1b[37m \x1b[35m[${time()}] \x1b[37m${value}\x1b[37m`)}
 async function sysPrintNewCommand(value) {await console.log(`\x1b[0m[\x1b[31mКоманда\x1b[0m] \x1b[35m[${date()}]\x1b[37m \x1b[35m[${time()}] \x1b[37m${value}\x1b[37m`)}
-async function sysPrintFile(value) {await console.log(`\x1b[0m[\x1b[36mФайл\x1b[0m] \x1b[35m[${date()}]\x1b[37m \x1b[35m[${time()}] \x1b[37m${value}\x1b[37m`)}
 async function sysMySQLPrint(value) {await console.log(`\x1b[0m[\x1b[34mMySQL\x1b[0m] \x1b[35m[${date()}]\x1b[37m \x1b[35m[${time()}] \x1b[37m${value}\x1b[37m`)}
-
-function getReason(value) {
-    if (value == null) return `Отсутствует.`
-    else return value;
-}
-
-function isUndefined (value) {
-    return !!value;
-}
 
 async function splice(array = [], object){
     let index = array.indexOf(`${object}`);
@@ -139,13 +129,11 @@ async function createError(err, fatal = false){
     const newDate = date().split(".");
 
     let sql = `
-INSERT INTO \`${process.env.MYSQL_TABLE_ERRORS}\` 
-(\`id\`, \`date\`, \`time\`, \`message\`, \`code\`, \`status\`, \`method\`, \`url\`) 
-VALUES (NULL, '${newDate[2]}-${newDate[1]}-${newDate[0]}', '${time()}', "${err.rawError.message}", '${err.code}', '${err.status}', '${err.method}', '${err.url}');`;
+INSERT INTO \`${process.env.MYSQL_TABLE_ERRORS}\` (\`id\`, \`date\`, \`time\`, \`message\`, \`code\`, \`status\`, \`method\`, \`url\`) VALUES (NULL, '${newDate[2]}-${newDate[1]}-${newDate[0]}', '${time()}', "${err.rawError.message}", '${err.code}', '${err.status}', '${err.method}', '${err.url}');`;
 
     await sysError(JSON.stringify(err));
     await db.query(sql, err => {
-       if (err) throw err;
+       if (err) sysError(err);
     })
 
     if (fatal) throw err;
@@ -783,15 +771,18 @@ class handler{
         } catch (err) {await sendReplyHidden(this.interaction, `Произошла ошибка.`);}
     }
 
-    async out_channel_history_messages(channel, quantity){
-        let sql = `SELECT * FROM ${process.env.MYSQL_TABLE_MESSAGES} WHERE JSON_CONTAINS(guild, '{"id": "${this.interaction.guildId}"}') AND JSON_CONTAINS(channel, '{"id": "${channel.id}"}') ORDER BY id DESC LIMIT ${quantity};`
+    async out_channel_history_messages(channel, quantity, search){
+        let sql
+        if (search) sql = `SELECT * FROM ${process.env.MYSQL_TABLE_MESSAGES} WHERE JSON_CONTAINS(guild, '{"id": "${this.interaction.guildId}"}') AND JSON_CONTAINS(channel, '{"id": "${channel.id}"}') AND content LIKE '%${search}%' ORDER BY id DESC LIMIT ${quantity};`;
+        else sql = `SELECT * FROM ${process.env.MYSQL_TABLE_MESSAGES} WHERE JSON_CONTAINS(guild, '{"id": "${this.interaction.guildId}"}') AND JSON_CONTAINS(channel, '{"id": "${channel.id}"}') ORDER BY id DESC LIMIT ${quantity};`;
+        console.log(sql);
         let logPathFile = `./temp/guild_${this.interaction.guild.id}.log`;
         let interaction = this.interaction;
 
         await db.query(sql, async (err, data) => {
             if (err) throw err;
             if (data) await sysMySQLPrint(`Данные сообщений гильдии '${this.interaction.guildId}' для канала '${channel.id}' успешно получены!`);
-            if (data.length <= 0) return await sendReplyHidden(interaction, "На вашем сервере нет истории сообщений.");
+            if (data.length <= 0) return await sendReplyHidden(interaction, "Результат запроса оказался пустым.");
             else {
                 let allQuantity = data.length;
                 if (quantity >= allQuantity) await getFile(allQuantity, data);
@@ -921,6 +912,71 @@ class handler{
         await this.interaction.reply({ephemeral: ephemeral, embeds: [embed], fetchReply: true});
     }
 
+    async help(){
+         return await new Promise(async () => {
+            await new database().getCommands()
+                .then( async (data) => {
+                   console.log(data);
+                   let list = ``;
+
+                    for (let i = 0; i < data.length; i++) {
+                        if (Boolean(data[i].active)){
+                            let description_localizations = JSON.parse(data[i].description_localizations);
+                            list += `\n:incoming_envelope:\`/${data[i].name}\` - ${description_localizations["ru"]}`;
+                        }
+                    }
+
+                    let embed = new EmbedBuilder()
+                        .setColor(embed_color)
+                        .setTitle(`Список слэш-команд приложения`)
+                        .setDescription(list)
+                        .setFooter({
+                            iconURL: this.interaction.user.displayAvatarURL(),
+                            text: `Application "Simplex" | Requested ${this.interaction.user.username}`});
+
+                    if (Boolean(Number(process.env.API_WEB_STATUS))) embed.setFields({name: ":information_source: Information:", value: `[Подробнее о командах можно узнать здесь](${process.env.API_WEB_PROTOCOL}://${process.env.API_WEB_HOST}/${process.env.API_WEB_PAGE_MAIN}?document=docs)`})
+
+                    await this.interaction.reply({ephemeral: false, embeds: [embed], fetchReply: true});
+
+                })
+                .catch( async (err) => {
+                    console.log(err);
+                });
+         });
+    }
+
+    async add_an_emoji(attachment, name){
+         if(attachment.contentType.split("/")[0] !== "image") return await this.send_error_notification("Файл должен быть типа изображения.", true);
+         await this.interaction.guild.emojis.create({
+             attachment: attachment.url,
+             name: name
+         })
+             .then( async () => {
+                 await this.send_info_notification(`Новое эмодзи \`${name}\` добавлено на сервер!`);
+             })
+             .catch( async (err) => {
+                 await this.send_error_notification(`Не удалось добавить новое эмодзи \`${name}\`. \nПопробуйте использовать другое изображение. \n${err}`, true);
+                 await sysError(err);
+             })
+    }
+
+    async add_an_sticker(attachment, name, tags = null, description = null){
+        if(attachment.contentType.split("/")[0] !== "image") return await this.send_error_notification("Файл должен быть типа изображения.", true);
+        await this.interaction.guild.stickers.create({
+            attachment: attachment.url,
+            name: name,
+            tags: tags,
+            description: description,
+        })
+            .then( async () => {
+                await this.send_info_notification(`Новый стикер \`${name}\` добавлен на сервер!`);
+            })
+            .catch( async (err) => {
+                await this.send_error_notification(`Не удалось добавить новый стикер \`${name}\`. \nПопробуйте использовать другое изображение. \n${err}`, true);
+                await sysError(err);
+            })
+    }
+
 }
 
 class serverBase{
@@ -964,7 +1020,6 @@ class serverBase{
 class moderator{
 
     constructor(client, interaction) {
-        this.client = client;
         this.interaction = interaction;
     }
     async addUser(user){
@@ -1091,9 +1146,11 @@ class warn{
 
             // Проверка, если модератор уже в базе
             let moderators = await new database().getModerators(this.interaction.guildId);
-            let mod_users = await JSON.parse(moderators.users);
-            for (let i= 0; i < mod_users.length; i++) {
-                if (mod_users[i] === user.id) return reject({type: "error", reason: `Пользователь <@${user.id}> является модератором.`});
+            if (moderators){
+                let mod_users = await JSON.parse(moderators.users);
+                for (let i= 0; i < mod_users.length; i++) {
+                    if (mod_users[i] === user.id) return reject({type: "error", reason: `Пользователь <@${user.id}> является модератором.`});
+                }
             }
 
             await new database().getWarns(this.interaction.guildId, user)
@@ -1149,9 +1206,11 @@ class warn{
 
             // Проверка, если модератор уже в базе
             let moderators = await new database().getModerators(this.interaction.guildId);
-            let mod_users = JSON.parse(moderators.users);
-            for (let i= 0; i < mod_users.length; i++) {
-                if (mod_users[i] === user.id) return reject({type: "error", reason: `Пользователь <@${user.id}> является модератором.`});
+            if (moderators){
+                let mod_users = JSON.parse(moderators.users);
+                for (let i= 0; i < mod_users.length; i++) {
+                    if (mod_users[i] === user.id) return reject({type: "error", reason: `Пользователь <@${user.id}> является модератором.`});
+                }
             }
 
             await new database().getWarns(this.interaction.guildId, user)
@@ -1207,7 +1266,6 @@ class warn{
               }
            });
         });
-        ;
     }
 
     async addUser_fake(user){
@@ -1379,7 +1437,7 @@ class marriage{
                            for (let i= 0; i < data.length; i++) {
                                let off_user = JSON.parse(data[i].offering_user);
                                let exp_user = JSON.parse(data[i].expected_user);
-                               marriages += `\n\n💍💍 <@${off_user.id}> в браке с <@${exp_user.id}>. \n\`[${data[i].date} | ${data[i].time}]\``;
+                               marriages += `\n\n💍💍 <@${off_user.id}> в браке с <@${exp_user.id}>. \n\`[${new Date(Date.parse(data[i].date)).toISOString().split("T")[0]} | ${data[i].time}]\``;
                            }
 
                            let embed = new EmbedBuilder()
@@ -1510,7 +1568,7 @@ class database {
         await db.query(`SELECT * FROM \`${process.env.MYSQL_TABLE_COMMANDS_LIST}\`; `, async (err, data) => {
             if (err) throw err;
             else {
-                await data.forEach( (el_db, index) => {
+                await data.forEach( (el_db) => {
                     let result = commands.body.find( (el_list) => {
                         return el_list.name === el_db.name;
                     })
@@ -1608,6 +1666,15 @@ class database {
                 });
         });
     }
+
+    async getCommands(){
+        return await new Promise (async (resolve, reject) => {
+            await db.query(`SELECT * FROM ${process.env.MYSQL_TABLE_COMMANDS_LIST}`, async (err, data) => {
+                if (err) await reject(err);
+                else await resolve(data);
+            })
+        })
+    }
 }
 
 class report{
@@ -1687,8 +1754,6 @@ async function convertDate(str) {
 }
 
 module.exports = {
-    addWriteInJSON,
-    convertDate,
     checkObject,
     checkObjects,
     checkServerBase,
@@ -1713,14 +1778,11 @@ module.exports = {
     send,
     sendPrivateMessage,
     sendReply,
-    sendReplyFileHidden,
     sendReplyHidden,
-    sendUserInvite,
     serverBase,
     sysError,
     sysInfo,
     sysInfoError,
-    sysMySQLPrint,
     sysPrint,
     sysPrintNewCommand,
     warn,

@@ -2,7 +2,7 @@
 // For deleting this inscription, you automatically lose the license to edit this code.
 require('dotenv').config();
 const {Client, GatewayIntentBits, Routes, REST, ActivityType, Events} = require('discord.js'); // Подключаем библиотеку discord.js
-const {sysPrint, sysError, createNewHistoryMessage, checkServerBase, database, createError, handler, warn} = require("./src/common/modules");
+const {sysPrint, sysError, createNewHistoryMessage, checkServerBase, database, createError} = require("./src/common/modules");
 const {version, name} = require("./package.json");
 const commands = require('./src/commands/slash_commands');
 const {execute} = require('./src/common/interactions');
@@ -20,12 +20,27 @@ const client = new Client({
         GatewayIntentBits["GuildInvites"],
         GatewayIntentBits["GuildMessageTyping"],
         GatewayIntentBits["GuildPresences"],
+        GatewayIntentBits["GuildModeration"],
+        GatewayIntentBits["GuildBans"],
+        GatewayIntentBits["GuildEmojisAndStickers"],
+        GatewayIntentBits["GuildWebhooks"],
+        GatewayIntentBits["GuildPresences"],
+        GatewayIntentBits["GuildMessageReactions"],
+        GatewayIntentBits["DirectMessages"],
+        GatewayIntentBits["DirectMessageReactions"],
+        GatewayIntentBits["DirectMessageTyping"],
+        GatewayIntentBits["GuildScheduledEvents"],
+        GatewayIntentBits["AutoModerationConfiguration"],
+        GatewayIntentBits["AutoModerationExecution"],
+        GatewayIntentBits["GuildMessagePolls"],
+        GatewayIntentBits["DirectMessagePolls"],
     ]
 }) // Объявляем, что client - бот
 
 let IMAPClientToken = process.env["API_BOT_TOKEN"];
-let testBotToken = process.env["API_TEST_BOT_TOKEN"];
-let {IMAPClient_id, testBotClient_id} = require('./config.json');
+// let testBotToken = process.env["API_TEST_BOT_TOKEN"];
+let {IMAPClient_id} = require('./config.json');
+// let {testBotClient_id} = require('./config.json');
 
 const token = IMAPClientToken;
 const client_id = IMAPClient_id;
@@ -48,9 +63,9 @@ client.on(Events.ClientReady, async (bot) => {
         }, 10000);
     }
 
-    client.guilds.cache.forEach(guild => {
-        checkServerBase(guild.id);
+    await client.guilds.cache.forEach(guild => {
         new database().checkServerBase(guild.id);
+        checkServerBase(guild.id);
     });
 
     await sysPrint(`Интегрированное приложение "${bot.user.username}" запустилось.`);
@@ -73,7 +88,7 @@ client.on(Events.MessageCreate, async (message) => {
                     else if (Number(data["channel_ai_id"]) === 0) await message.reply("Канал по умолчанию не указан для разговоров с ИИ. Используйте </set_chat_ai:1231952621372313610>");
                     else if (Number(data["channel_ai_id"]) !== Number(message.channel.id)) await message.reply(`Для разговоров с ИИ используйте канал <#${data["channel_ai_id"]}>`);
                     else {
-                        await new sberGigaChat().request(message.content)
+                        await new sberGigaChat(client).request(message.content)
                             .then(async (data) => {
                                 try {
                                     await message.reply(data.toString());

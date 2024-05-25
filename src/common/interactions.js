@@ -8,14 +8,14 @@ const {
     getGuildIcon,
     getRandomNumber,
     sendReply,
-    serverBase,
     moderator,
     warn,
     marriage,
     report,
     role,
-    invite, interaction, handler, database, createError
+    invite, handler, database, createError
 } = require("./modules");
+const {sberGigaChat} = require("../ai/sber/gigachat");
 
 module.exports = {
     name: Events.InteractionCreate,
@@ -27,7 +27,8 @@ module.exports = {
             if (cm === "out_channel_history_messages"){
                 let channel = interaction.options.getChannel('channel');
                 let quantity = interaction.options.getNumber('quantity');
-                await new handler(client, interaction).out_channel_history_messages(channel, quantity)
+                let search = interaction.options.getString('search');
+                await new handler(client, interaction).out_channel_history_messages(channel, quantity, search)
                     .catch(async () => {
                         await new handler(client, interaction)
                             .send_warn_notification(`Техническая ошибка. Попробуйте ещё раз.`);
@@ -406,10 +407,37 @@ module.exports = {
                 if (status) await new handler(client, interaction).send_info_notification(`На сервере включен доступ к ИИ. Укажите текстовый канал, где будет использоваться ИИ: </set_chat_ai:1231952621372313610>`);
                 else await new handler(client, interaction).send_info_notification(`На сервере выключен доступ к ИИ.`);
             }
-            else {
-                await sendReplyHidden(interaction, `Неизвестная команда. Как вы её нашли?`)
+            else if (cm === "help"){
+                await new handler(client, interaction).help();
             }
-        } else if (interaction.isStringSelectMenu()) {
+            else if (cm === "draw"){
+                const request = interaction.options.getString("request");
+                await new sberGigaChat(client, interaction).requestImage(request)
+                    .then(async (data) => {
+                        await new handler(client, interaction).send_info_notification(data);
+                    })
+                    .catch(async (err) => {
+                        await sysError(err);
+                    })
+            }
+            else if (cm === "add_an_emoji"){
+                const attachment = interaction.options.getAttachment("picture");
+                const name = interaction.options.getString("name");
+                await new handler(client, interaction).add_an_emoji(attachment, name);
+            }
+            else if (cm === "add_an_sticker"){
+                const attachment = interaction.options.getAttachment("picture");
+                const name = interaction.options.getString("name");
+                const tags = interaction.options.getString("tags");
+                const description = interaction.options.getString("description");
+                await new handler(client, interaction).add_an_sticker(attachment, name, tags, description);
+            }
+
+            else {
+                await sendReplyHidden(interaction, `Неизвестная команда. Как вы её нашли?`);
+            }
+        }
+        else if (interaction.isStringSelectMenu()) {
             switch (interaction.customId) {
                 case "selectYaMusicPlaylist":
                     const yaMusicUrl = interaction.values[0];
@@ -429,7 +457,8 @@ module.exports = {
 
                     break;
             }
-        } else if (interaction.isModalSubmit()) {
+        }
+        else if (interaction.isModalSubmit()) {
             if (interaction.customId === "modal_send_bug_report"){
                 let content = interaction.fields.getTextInputValue("modalSendBugReportContent");
                 await new report(interaction).save(content);
@@ -452,18 +481,24 @@ module.exports = {
                 }
 
             }
-        } else if (interaction.isUserContextMenuCommand()) {
+        }
+        else if (interaction.isUserContextMenuCommand()) {
             try {
                 let user = await client.users.cache.get(interaction.targetId);
                 await sysPrintNewCommand(`Server: ${interaction.guild.id}: ${interaction.user.username} использует user-команду "${interaction.commandName}"`);
                 let cm = interaction.commandName;
-                if (cm === "Get the user avatar.") await getUserAvatar(client, interaction, user);
-                else if (cm === "Get user information.") await getUserInfo(client, interaction, user);
+                if (cm === "Get the user avatar") await getUserAvatar(client, interaction, user);
+                else if (cm === "Get user information") await getUserInfo(client, interaction, user);
+                else if (cm === "Flip the user nickname") await new handler(client, interaction).send_info_notification(`Перевёрнутое имя пользователя <@${user.id}>: \n\`${user.username}\` - ${user.username.split("").reverse().join("")}`);
+                else if (cm === "Marry") await new marriage(client, interaction).marry(user);
+                else if (cm === "Warn") await new warn(client, interaction).addUser(user);
+                else await sendReplyHidden(interaction, `Неизвестная команда. Как вы её нашли?`);
             } catch (err) {
-                await sendReplyHidden(interaction, `Не удалось найти пользователя. Попробуйте ещё раз.`);
+                await new handler(client, interaction).send_warn_notification(`Не удалось найти пользователя. Попробуйте ещё раз.`, true);
                 await createError(err);
             }
-        } else if (interaction.isButton()){
+        }
+        else if (interaction.isButton()){
             let button = JSON.parse(interaction.customId);
             await sysPrintNewCommand(`Server: ${interaction.guild.id}: ${interaction.user.username} использует инлайн-кнопку "${button.name}"`);
             const cd = button.name; // CM - CommandId
