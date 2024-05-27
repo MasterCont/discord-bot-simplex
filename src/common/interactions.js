@@ -378,7 +378,7 @@ module.exports = {
             else if (cm === "divorce"){
                 await new marriage(client, interaction).divorce(interaction.guild, interaction.user)
                     .then(async (data) => {
-                        await new handler(client, interaction).send_info_notification(`Брак \`${data.offering_user}\` и \`${data.expected_user}\` разорван.`)
+                        await new handler(client, interaction).send_info_notification(`Брак \`${data.offering_user.username}\` и \`${data.expected_user.username}\` разорван.`)
                     })
                     .catch(async (err) => {
                         if (err.type === "warn") await new handler(client, interaction)
@@ -432,7 +432,10 @@ module.exports = {
                 const description = interaction.options.getString("description");
                 await new handler(client, interaction).add_an_sticker(attachment, name, tags, description);
             }
-
+            else if (cm === "get_role_permissions"){
+                const role = interaction.options.getRole("role");
+                await new handler(client, interaction).get_role_permissions(role);
+            }
             else {
                 await sendReplyHidden(interaction, `Неизвестная команда. Как вы её нашли?`);
             }
@@ -510,8 +513,13 @@ module.exports = {
                     await interaction.guild.members.fetch(button.exp_uid).then( async (expected_user) => { // Предложившему брак
 
                         // Если пользователи согласны на брак, то добавляем новый брак
-                        await new marriage(client, interaction).accept(interaction.guild, offering_user, expected_user);
-
+                        await new marriage(client, interaction).checkMarriage(interaction.guild, offering_user, expected_user)
+                            .then( async () => {
+                                await new marriage(client, interaction).accept(interaction.guild, offering_user, expected_user);
+                            }).catch(async (err) => {
+                               await new handler(client, interaction).send_error_notification(err, true);
+                            });
+                        await interaction.message.delete();
                     });
                 });
             }

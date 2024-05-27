@@ -1,6 +1,7 @@
 const { time, date, getDateMySQL} = require("./time");
 const {EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, PermissionFlagsBits, ButtonBuilder, ButtonStyle,
-    AttachmentBuilder
+    AttachmentBuilder,
+    PermissionsBitField
 } = require("discord.js");
 const {embed_color} = require("../../config.json");
 const fs = require('fs');
@@ -153,6 +154,8 @@ function getTrackArtists(array) {
 
 async function createNewHistoryMessage(guild, channel, sql_role, message){
 
+    if (!Boolean(message.content)) message["content"] = "[investment]";
+
     let messageLog = `Server: @${guild.id} | Channel: @${message.channel.id} | Message: @${message.author.username}: ${message.content}`;
     message.attachments.forEach((item) => {
         messageLog += `\n[ Вложение | ${item.url} ]`; // Если картинка
@@ -177,7 +180,10 @@ async function createNewHistoryMessage(guild, channel, sql_role, message){
 
     let sql = `INSERT INTO ${process.env.MYSQL_TABLE_MESSAGES} (id, date, time, guild, channel, role, author, content) VALUES (NULL, '${sql_date}', '${sql_time}', '${sql_guild}', '${sql_channel}', '${sql_role}', '${sql_author}', '${sql_content}')`;
     db.query(sql, async (err) => {
-        if (err) await sysError(err);
+         if (err) {
+             await sysError(sql);
+             await sysError(err);
+         }
     });
 
 }
@@ -976,6 +982,23 @@ class handler{
             })
     }
 
+    async get_role_permissions(role){
+
+         let content = `Все разрешения роли <@&${role.id}>: \n`;
+         let permissions = permissionsNames(new PermissionsBitField(role.permissions.bitfield));
+         if (permissions.length <= 0) content += `Данная роль не имеет разрешений.`;
+         for (let i = 0; i < permissions.length; i++) content += `\`${permissions[i]}\`, `;
+
+        let embed = new EmbedBuilder()
+            .setTitle(`:information_source:  Информация о роли`)
+            .setDescription(content)
+            .setColor(embed_color)
+            .setTimestamp(new Date())
+            .setFooter({text: this.interaction.user.username, iconURL: this.interaction.user.avatarURL()});
+
+        await this.interaction.reply({ephemeral: false, embeds: [embed], fetchReply: true});
+    }
+
 }
 
 class serverBase{
@@ -1304,32 +1327,11 @@ class marriage{
                     if (!Boolean(data["marriages"])) return reject({type: "error", reason: `На сервере выключена система браков. Используйте \`/marry_system\` для того, чтобы включить данную систему.`});
                     if (this.interaction.user.id === user.id) return reject({type: "error", reason: `Нельзя жениться на самому себе.`});
 
-                    await new database().getMarriages(this.interaction.guildId)
-                        .then(async (data) => {
-
-                            let partner;
-                            // Циклом проходим все созданные браки, чтобы проверить в браке ли пользователь
-                            for (let i = 0; i < data.length; i++) {
-                                let off_user = JSON.parse(data[i].offering_user);
-                                let exp_user = JSON.parse(data[i].expected_user);
-                                // Если пользователь, который вызывает итерацию, состоит в браке, то прервываем функцию, сообщив, что он/она уже состоит в браке.
-                                if (this.interaction.user.id === off_user.id || this.interaction.user.id === exp_user.id) {
-                                    if (this.interaction.user.id === off_user.id) partner = exp_user.username;
-                                    else if (this.interaction.user.id === exp_user.id) partner = off_user.username;
-                                    return reject({type: "error", reason: `Вы уже состоите в браке с пользователем \`${partner}\`.`});
-                                }
-
-                                // Если пользователь, указаный в опции состоит в браке, то прерываем функцию, сообщив, что пользователь занят для брака
-                                else if (user.id === off_user.id || user.id === exp_user.id) {
-                                    if (user.id === off_user.id) partner = exp_user.username;
-                                    else if (user.id === exp_user.id) partner = off_user.username;
-                                    return reject({type: "error", reason: `Пользователь \`${user.username}\` уже состоит в браке с пользователем \`${partner}\`.`});
-                                }
-                            }
+                    await new marriage(this.client, this.interaction).checkMarriage(this.interaction.guild, this.interaction.user, user)
+                        .then( async () => {
 
                             // Создаём билдер для кнопок
                             const buttons = new ActionRowBuilder();
-
 
                             // Создаём кнопку для соглашения брака
                             const buttonYes = new ButtonBuilder();
@@ -1359,13 +1361,9 @@ class marriage{
 
                             this.interaction.reply({content: `<@${user.id}>, <@${this.interaction.user.id}> хочет вступить с вами в брак.`, components: [buttons]});
                             return {status: true};
-                            
-                        })
-                        .catch(async (err) => {
-                            await reject({type: "warn", reason: `Не удалось получить список виртуальных любовных браков.`});
-                            await sysError(err);
-                        })
-
+                        }).catch(async (err) => {
+                            await new handler(this.client, this.interaction).send_error_notification(err, true);
+                        });
                 })
                 .catch(async (err) => {
                     await reject({type: "warn", reason: `Сервис временно недоступен. Попробуйте ещё раз.`});
@@ -1463,6 +1461,24 @@ class marriage{
                });
         });
 
+    }
+
+    async checkMarriage(guild, offering_user, expected_user){
+        return await new Promise(async (resolve, reject) => {
+            try {
+                let sql = `SELECT * FROM \`discord_bot_simplex_marriages\` WHERE \`guild_id\` = '${guild.id}' AND JSON_EXTRACT(offering_user, "$.id") = '${offering_user.id}' OR JSON_EXTRACT(expected_user, "$.id") = '${expected_user.id}';`;
+                await db.query(sql, async (err, data) => {
+                    if (err) await reject(err);
+                    else {
+                        if (data.length <= 0) resolve(true);
+                        else reject(`Вы уже состоите в виртуальном любовном браке c <@${JSON.parse(data[0].expected_user).id}>.`);
+                    }
+                });
+            } catch (err){
+                await reject(err);
+                await sysError(err);
+            }
+        })
     }
 
 }
@@ -1750,6 +1766,18 @@ async function convertDate(str) {
         month = ("0" + (date.getMonth() + 1)).slice(-2),
         day = ("0" + date.getDate()).slice(-2);
     return [date.getFullYear(), month, day].join("-");
+}
+
+// imported from https://stackoverflow.com/questions/74843463/is-there-a-way-to-find-the-name-of-the-permission-using-the-permissionsbitfield
+function permissionsNames(permissions){
+    const result = [];
+
+    for (const perm of Object.keys(PermissionsBitField.Flags)) {
+        if (permissions.has(PermissionsBitField.Flags[perm])) {
+            result.push(perm);
+        }
+    }
+    return result;
 }
 
 module.exports = {

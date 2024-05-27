@@ -690,6 +690,23 @@ const commands = {
         //     .setDMPermission(false)
         //     .toJSON(),
 
+        // 1.2.6
+        new SlashCommandBuilder()
+            .setName("get_role_permissions").setNameLocalization("ru", "получить_разрешения_роли")
+            .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+            .setDescription("Displays all permissions of the role.")
+            .setDescriptionLocalization("ru", "Выводит все разрешения роли.")
+            .addRoleOption((option) =>
+                option.setName("role")
+                    .setNameLocalization("ru", "роль")
+                    .setDescription("The role you want to get information from.")
+                    .setDescriptionLocalization("ru", "Роль, от которой вы хотите получить информацию.")
+                    .setRequired(true)
+            )
+            .setNSFW(false)
+            .setDMPermission(false)
+            .toJSON(),
+
         // User context commands
         new ContextMenuCommandBuilder()
             .setName("Get the user avatar")
