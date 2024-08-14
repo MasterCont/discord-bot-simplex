@@ -436,6 +436,11 @@ module.exports = {
                 const role = interaction.options.getRole("role");
                 await new handler(client, interaction).get_role_permissions(role);
             }
+            else if (cm === "api"){
+                const cm = interaction.options.getSubcommand();
+                console.log(cm)
+                interaction.reply(cm)
+            }
             else {
                 await sendReplyHidden(interaction, `Неизвестная команда. Как вы её нашли?`);
             }

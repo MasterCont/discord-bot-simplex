@@ -38,9 +38,9 @@ const client = new Client({
 }) // Объявляем, что client - бот
 
 let IMAPClientToken = process.env["API_BOT_TOKEN"];
-// let testBotToken = process.env["API_TEST_BOT_TOKEN"];
-let {IMAPClient_id} = require('./config.json');
-// let {testBotClient_id} = require('./config.json');
+ // let testBotToken = process.env["API_TEST_BOT2_TOKEN"];
+let {IMAPClient_id, guild_id} = require('./config.json');
+ // let {testBotClient_id, testBotClient_id2, testGuild_id} = require('./config.json');
 
 const token = IMAPClientToken;
 const client_id = IMAPClient_id;
@@ -84,9 +84,19 @@ client.on(Events.MessageCreate, async (message) => {
         if (user.id === client.user.id && user.id !== message.author.id){
             new database().getServer(message.guild.id)
                 .then(async (data) => {
-                    if (!data["ai"]) await message.reply("Система искусственного интеллекта на этом сервере отключена. Чтобы включить ее, используйте </ai_system:1231954362717311056>");
-                    else if (Number(data["channel_ai_id"]) === 0) await message.reply("Канал по умолчанию не указан для разговоров с ИИ. Используйте </set_chat_ai:1231952621372313610>");
-                    else if (Number(data["channel_ai_id"]) !== Number(message.channel.id)) await message.reply(`Для разговоров с ИИ используйте канал <#${data["channel_ai_id"]}>`);
+                    if (!data["ai"]) {
+                        message.guild.members.cache.find(async (user) => {
+                            if (user.permissions.has("Administrator")) await message.reply("Система искусственного интеллекта на этом сервере отключена. Чтобы включить ее, используйте </ai_system:1231954362717311056>");
+                            else await message.author.send("Система искусственного интеллекта на этом сервере отключена. \nПопросите администратора сервера включить данную функцию.");
+                        })
+                    }
+                    else if (Number(data["channel_ai_id"]) === 0) {
+                        message.guild.members.cache.find(async (user) => {
+                            if (user.permissions.has("Administrator")) await message.reply("Канал по умолчанию не указан для разговоров с ИИ. Используйте </set_chat_ai:1231952621372313610>");
+                            else await message.author.send("Канал по умолчанию не указан для разговоров с ИИ. \nПопросите администратора сервера указать нужный канал сервера.");
+                        })
+                    }
+                    else if (Number(data["channel_ai_id"]) !== Number(message.channel.id)) await message.author.send(`Для разговоров с ИИ используйте канал <#${data["channel_ai_id"]}>`);
                     else {
                         await new sberGigaChat(client).request(message.content)
                             .then(async (data) => {
@@ -140,10 +150,6 @@ client.on(Events.Error, async (err) => {
 
     await createError(err);
 });
-
-// client.on(Events.TypingStart, async (data) => {
-//     await client.guilds.cache.get(data.guild.id).channels.cache.get(data.channel.id).send(`${data.user.username} печатает...`);
-// })
 
 
 async function main(){

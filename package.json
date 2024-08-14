@@ -1,6 +1,6 @@
 {
   "name": "discord-bot-simplex",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Discord bot for Discord Servers",
   "main": "app.js",
   "scripts": {

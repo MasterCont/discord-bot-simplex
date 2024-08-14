@@ -747,6 +747,29 @@ const commands = {
             .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages)
             .setDMPermission(true)
             .toJSON(),
+    ],
+    root: [
+        new SlashCommandBuilder()
+            .setName("api")
+            .setDescription("A test command")
+            .addSubcommand(
+                (command) => command
+                    .setName("sub1")
+                    .setDescription("A subcommand")
+            )
+            .addSubcommand(
+                (command) => command
+                    .setName("sub2")
+                    .setDescription("A subcommand")
+            )
+            .addSubcommand(
+                (command) => command
+                    .setName("sub3")
+                    .setDescription("A subcommand")
+            )
+            .setNSFW(false)
+            .setDMPermission(false)
+            .toJSON(),
     ]
 }
 
