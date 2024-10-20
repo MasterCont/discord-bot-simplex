@@ -1,31 +1,31 @@
 class Time{
     Hours(){
-        var Hours = new Date().getHours();
+        const Hours = new Date().getHours();
         if(Hours < 10) return `0${Hours}`
         else return Hours;
     }
     Minutes(){
-        var Minutes = new Date().getMinutes();
+        const Minutes = new Date().getMinutes();
         if(Minutes < 10) return `0${Minutes}`
         else return Minutes;
     }
     Seconds(){
-        var Seconds = new Date().getSeconds();
+        const Seconds = new Date().getSeconds();
         if(Seconds < 10) return `0${Seconds}`
         else return Seconds;
     }
     Date(){
-        var date = new Date().getDate();
+        const date = new Date().getDate();
         if(date < 10) return `0${date}`
         else return date;
     }
     Month(){
-        var Month = new Date().getMonth();
+        const Month = new Date().getMonth();
         if(Month < 10) return `0${Month}`
         else return Month;
     }
     Year(){
-        var Year = new Date().getFullYear();
+        const Year = new Date().getFullYear();
         return Year;
     }
 }
@@ -44,4 +44,4 @@ async function getDateMySQL(){
     return `${array[2]}-${array[1]}-${array[0]}`;
 }
 
-module.exports = {time, date, Time, getDateMySQL};
+module.exports = {time, date, Time};

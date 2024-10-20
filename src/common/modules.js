@@ -1487,7 +1487,7 @@ class database {
     async initialization(){
         let initialization = new Promise(async (resolve, reject) => {
             // Проверяем наличие таблицы, где будут храниться сообщения
-            await db.query(`CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_MESSAGES} (id INT NOT NULL AUTO_INCREMENT , PRIMARY KEY (id), date DATE NOT NULL , time TIME NOT NULL , guild JSON NOT NULL , channel JSON NOT NULL , role VARCHAR(4) NOT NULL , author JSON NOT NULL , content JSON NOT NULL ) ENGINE = InnoDB; `, (err) => {
+            await db.query({sql: `CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_MESSAGES} (id INT NOT NULL AUTO_INCREMENT , PRIMARY KEY (id), date DATE NOT NULL , time TIME NOT NULL , guild JSON NOT NULL , channel JSON NOT NULL , role VARCHAR(4) NOT NULL , author JSON NOT NULL , content JSON NOT NULL ) ENGINE = InnoDB; `, timeout: process.env.MYSQL_QUERY_TIMEOUT} , (err) => {
                 if (err) {
                     sysMySQLError(`Невозможно инициализировать таблицу "${process.env.MYSQL_TABLE_MESSAGES}": ${err}`);
                     reject(err);
@@ -1495,7 +1495,7 @@ class database {
             });
 
             // Проверяем наличие таблицы, где будут хранится репорты к приложению
-            await db.query(`CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_REPORTS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NULL DEFAULT NULL , \`date\` DATE NOT NULL , \`time\` TIME NOT NULL , \`channel_id\` VARCHAR(20) NULL DEFAULT NULL , \`author\` JSON NOT NULL , \`content\` TEXT NULL DEFAULT NULL , PRIMARY KEY (\`id\`)) ENGINE = InnoDB;`, (err) => {
+            await db.query({sql: `CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_REPORTS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NULL DEFAULT NULL , \`date\` DATE NOT NULL , \`time\` TIME NOT NULL , \`channel_id\` VARCHAR(20) NULL DEFAULT NULL , \`author\` JSON NOT NULL , \`content\` TEXT NULL DEFAULT NULL , PRIMARY KEY (\`id\`)) ENGINE = InnoDB;`, timeout: process.env.MYSQL_QUERY_TIMEOUT}, (err) => {
                 if (err) {
                     sysMySQLError(`Невозможно инициализировать таблицу "${process.env.MYSQL_TABLE_REPORTS}": ${err}`);
                     reject(err);
@@ -1503,7 +1503,7 @@ class database {
             });
 
             // Проверяем наличие таблицы, где будут хранится список серверов с их настройками
-            await db.query(`CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_SERVERS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NOT NULL , \`notifications\` BOOLEAN NOT NULL , \`warns\` BOOLEAN NOT NULL , \`fake_warns\` BOOLEAN NOT NULL , \`ranks\` BOOLEAN NOT NULL , \`marriages\` BOOLEAN NOT NULL , \`logs\` BOOLEAN NOT NULL , \`channel_news_id\` VARCHAR(20) NOT NULL , \`channel_global_id\` VARCHAR(20) NOT NULL , \`count_warns_max\` TINYINT NOT NULL , \`channel_ai_id\` VARCHAR(20) NOT NULL, \`ai\` BOOLEAN NOT NULL DEFAULT FALSE, PRIMARY KEY (\`id\`), UNIQUE \`UNIQUE\` (\`guild_id\`)) ENGINE = InnoDB; `, (err) => {
+            await db.query({sql: `CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_SERVERS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NOT NULL , \`notifications\` BOOLEAN NOT NULL , \`warns\` BOOLEAN NOT NULL , \`fake_warns\` BOOLEAN NOT NULL , \`ranks\` BOOLEAN NOT NULL , \`marriages\` BOOLEAN NOT NULL , \`logs\` BOOLEAN NOT NULL , \`channel_news_id\` VARCHAR(20) NOT NULL , \`channel_global_id\` VARCHAR(20) NOT NULL , \`count_warns_max\` TINYINT NOT NULL , \`channel_ai_id\` VARCHAR(20) NOT NULL, \`ai\` BOOLEAN NOT NULL DEFAULT FALSE, PRIMARY KEY (\`id\`), UNIQUE \`UNIQUE\` (\`guild_id\`)) ENGINE = InnoDB; `, timeout: process.env.MYSQL_QUERY_TIMEOUT}, (err) => {
                 if (err) {
                     sysMySQLError(`Невозможно инициализировать таблицу "${process.env.MYSQL_TABLE_SERVERS}": ${err}`);
                     reject(err);
@@ -1511,7 +1511,7 @@ class database {
             })
 
             // Проверяем наличие таблицы, где будут хранится список команд приложения
-            await db.query(`CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_COMMANDS_LIST} (\`id\` INT NOT NULL AUTO_INCREMENT , \`name\` VARCHAR(32) NOT NULL , \`active\` BOOLEAN NOT NULL , \`name_localizations\` JSON NOT NULL , \`description\` CHAR(100) NULL DEFAULT NULL , \`description_localizations\` JSON NOT NULL , \`default_permission\` VARCHAR(10) NULL DEFAULT NULL , \`default_member_permissions\` VARCHAR(32) NULL DEFAULT NULL , \`dm_permission\` VARCHAR(10) NULL DEFAULT NULL , \`nsfw\` VARCHAR(10) NULL DEFAULT NULL, \`type\` TINYINT NOT NULL, \`options\` JSON NOT NULL , PRIMARY KEY (\`id\`), UNIQUE \`UNIQUE\` (\`name\`)) ENGINE = InnoDB;`, (err) => {
+            await db.query({sql: `CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_COMMANDS_LIST} (\`id\` INT NOT NULL AUTO_INCREMENT , \`name\` VARCHAR(32) NOT NULL , \`active\` BOOLEAN NOT NULL , \`name_localizations\` JSON NOT NULL , \`description\` CHAR(100) NULL DEFAULT NULL , \`description_localizations\` JSON NOT NULL , \`default_permission\` VARCHAR(10) NULL DEFAULT NULL , \`default_member_permissions\` VARCHAR(32) NULL DEFAULT NULL , \`dm_permission\` VARCHAR(10) NULL DEFAULT NULL , \`nsfw\` VARCHAR(10) NULL DEFAULT NULL, \`type\` TINYINT NOT NULL, \`options\` JSON NOT NULL , PRIMARY KEY (\`id\`), UNIQUE \`UNIQUE\` (\`name\`)) ENGINE = InnoDB;`, timeout: process.env.MYSQL_QUERY_TIMEOUT}, (err) => {
                 if (err) {
                     sysMySQLError(`Невозможно инициализировать таблицу "${process.env.MYSQL_TABLE_COMMANDS_LIST}": ${err}`);
                     reject(err);
@@ -1519,7 +1519,7 @@ class database {
             });
 
             // Проверяем наличие таблицы, где будут храниться ошибки приложения
-            await db.query(`CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_ERRORS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`date\` DATE NOT NULL , \`time\` TIME NOT NULL , \`message\` TEXT NULL DEFAULT NULL , \`code\` MEDIUMINT NULL DEFAULT NULL , \`status\` SMALLINT NULL DEFAULT NULL , \`method\` TINYTEXT NULL DEFAULT NULL , \`url\` TEXT NULL DEFAULT NULL, \`processed\` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (\`id\`)) ENGINE = InnoDB;`, (err) => {
+            await db.query({sql: `CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_ERRORS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`date\` DATE NOT NULL , \`time\` TIME NOT NULL , \`message\` TEXT NULL DEFAULT NULL , \`code\` MEDIUMINT NULL DEFAULT NULL , \`status\` SMALLINT NULL DEFAULT NULL , \`method\` TINYTEXT NULL DEFAULT NULL , \`url\` TEXT NULL DEFAULT NULL, \`processed\` BOOLEAN NOT NULL DEFAULT FALSE , PRIMARY KEY (\`id\`)) ENGINE = InnoDB;`, timeout: process.env.MYSQL_QUERY_TIMEOUT}, (err) => {
                 if (err) {
                     sysMySQLError(`Невозможно инициализировать таблицу "${process.env.MYSQL_TABLE_ERRORS}": ${err}`);
                     reject(err);
@@ -1532,7 +1532,7 @@ class database {
             // });
 
             // Проверяем наличие таблицы, где будут храниться действующие модераторы серверов
-            await db.query(`CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_MODERATORS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NULL DEFAULT NULL , \`users\` JSON NULL , \`roles\` JSON NULL , PRIMARY KEY (\`id\`), UNIQUE \`UNIQUE\` (\`guild_id\`)) ENGINE = InnoDB;`, (err) => {
+            await db.query({sql: `CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_MODERATORS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NULL DEFAULT NULL , \`users\` JSON NULL , \`roles\` JSON NULL , PRIMARY KEY (\`id\`), UNIQUE \`UNIQUE\` (\`guild_id\`)) ENGINE = InnoDB;`, timeout: process.env.MYSQL_QUERY_TIMEOUT}, (err) => {
                 if (err) {
                     sysMySQLError(`Невозможно инициализировать таблицу "${process.env.MYSQL_TABLE_MODERATORS}": ${err}`);
                     reject(err);
@@ -1540,7 +1540,7 @@ class database {
             });
 
             // Проверяем наличие таблицы, где будут храниться предупреждения пользователей за нарушения
-            await db.query(`CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_WARNS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NULL DEFAULT NULL , \`user_id\` VARCHAR(20) NULL DEFAULT NULL , \`count\` TINYINT NOT NULL DEFAULT '0' , PRIMARY KEY (\`id\`)) ENGINE = InnoDB;`, (err) => {
+            await db.query({sql: `CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_WARNS} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NULL DEFAULT NULL , \`user_id\` VARCHAR(20) NULL DEFAULT NULL , \`count\` TINYINT NOT NULL DEFAULT '0' , PRIMARY KEY (\`id\`)) ENGINE = InnoDB;`, timeout: process.env.MYSQL_QUERY_TIMEOUT} , (err) => {
                 if (err) {
                     sysMySQLError(`Невозможно инициализировать таблицу "${process.env.MYSQL_TABLE_WARNS}": ${err}`);
                     reject(err);
@@ -1548,7 +1548,7 @@ class database {
             });
 
             // Проверяем наличие таблицы, где будут храниться виртуальные любовные браки
-            await db.query(`CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_MARRIAGES} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NULL DEFAULT NULL , \`time\` TIME NOT NULL , \`date\` DATE NOT NULL , \`offering_user\` JSON NULL DEFAULT NULL , \`expected_user\` JSON NULL DEFAULT NULL , PRIMARY KEY (\`id\`)) ENGINE = InnoDB;`, (err) => {
+            await db.query({sql: `CREATE TABLE IF NOT EXISTS ${process.env.MYSQL_TABLE_MARRIAGES} (\`id\` INT NOT NULL AUTO_INCREMENT , \`guild_id\` VARCHAR(20) NULL DEFAULT NULL , \`time\` TIME NOT NULL , \`date\` DATE NOT NULL , \`offering_user\` JSON NULL DEFAULT NULL , \`expected_user\` JSON NULL DEFAULT NULL , PRIMARY KEY (\`id\`)) ENGINE = InnoDB;`, timeout: process.env.MYSQL_QUERY_TIMEOUT}, (err) => {
                 if (err) {
                     sysMySQLError(`Невозможно инициализировать таблицу "${process.env.MYSQL_TABLE_MARRIAGES}": ${err}`);
                     reject(err);
@@ -1557,7 +1557,7 @@ class database {
         });
 
         initialization.then(async () => {
-            await sysMySQLPrint(`База данных "${process.env.MYSQL_DATABASE}" инициализированна.`);
+            await sysMySQLPrint(`База данных "${process.env.MYSQL_DATABASE}" инициализируется...`);
         }).catch( async (err) => {
             await sysMySQLError(`База данных "${process.env.MYSQL_DATABASE}" не инициализированна.`);
             throw new Error(err);

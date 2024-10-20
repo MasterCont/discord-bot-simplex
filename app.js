@@ -40,6 +40,7 @@ const client = new Client({
 let IMAPClientToken = process.env["API_BOT_TOKEN"];
  // let testBotToken = process.env["API_TEST_BOT2_TOKEN"];
 let {IMAPClient_id, guild_id} = require('./config.json');
+const {setGlobalDispatcher, Agent} = require("undici");
  // let {testBotClient_id, testBotClient_id2, testGuild_id} = require('./config.json');
 
 const token = IMAPClientToken;
@@ -154,6 +155,7 @@ client.on(Events.Error, async (err) => {
 
 async function main(){
     try {
+        setGlobalDispatcher( new Agent({ connectTimeout: 300 }) );
         await new database().initialization(); // Инициализация базы данных
         await rest.put(Routes.applicationCommands(client_id), {body: commands.body}); // Записываем команды в базу
         await new database().check_availability_commands(commands); // Проверяем наличие команд
